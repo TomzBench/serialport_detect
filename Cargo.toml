@@ -1,0 +1,40 @@
+[package]
+name = "serialport-detect"
+version = "0.1.0"
+edition = "2024"
+authors = ["Thomas Chiantia <thomas.chiantia@gmail.com>"]
+description = "Small library of async helpers for serialport-rs"
+documentation = "https://docs.rs/serialport-async"
+license = "MPL-2.0"
+keywords = ["serial", "hardware", "system", "RS232", "async"]
+categories = ["hardware-support"]
+
+[target.'cfg(all(target_os = "linux", not(target_env = "musl")))'.dependencies]
+udev = { version = "0.9", features = ["mio"] }
+mio = { version = "1" }
+unescaper = { version = "0.1" }
+
+[target."cfg(windows)".dependencies.windows-sys]
+version = "0.60"
+optional = true
+features = [
+	"Win32_Foundation",
+	"Win32_Graphics_Gdi",
+	"Win32_Security",
+	"Win32_System_Threading",
+	"Win32_System_LibraryLoader",
+	"Win32_System_Rpc",
+	"Win32_UI_WindowsAndMessaging",
+]
+
+[dependencies]
+serialport = "4.7"
+pin-project-lite = "0.2"
+futures = { version = "0.3" }
+crossbeam = { version = "0.8" }
+parking_lot = { version = "0.12" }
+tracing = "0.1"
+
+[dev-dependencies]
+tracing-subscriber = "0.3"
+tokio = { version = "1.47", features = ["full"] }
