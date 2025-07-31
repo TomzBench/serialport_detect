@@ -2,12 +2,17 @@
 
 use crate::detect::{DeviceInfo, EventInfo, EventType, Queue};
 use futures::Stream;
-use mio::{Events, Interest, Token};
+use mio::{unix::SourceFd, Events, Interest, Token};
+use nix::{
+    sys::eventfd::{EfdFlags, EventFd},
+    unistd,
+};
 use std::{
     collections::HashMap,
     ffi::OsStr,
     fmt::{self, Debug},
     io,
+    os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, OwnedFd, RawFd},
     pin::Pin,
     sync::Arc,
     task::{Context, Poll},
@@ -19,6 +24,7 @@ use udev::Device;
 #[derive(Debug)]
 struct ListenerOptions {
     capacity: usize,
+    evfd: RawFd,
 }
 
 pub(crate) fn scan() -> io::Result<HashMap<String, EventInfo>> {
@@ -44,21 +50,29 @@ pub(crate) fn scan() -> io::Result<HashMap<String, EventInfo>> {
 }
 
 /// Listen for connected devices
-pub fn listen() -> EventIter {
+pub fn listen() -> io::Result<EventIter> {
     let queue = Arc::new(Queue::new());
     let theirs = Arc::clone(&queue);
-    let opts = ListenerOptions { capacity: 1024 };
+    let evfd = EventFd::from_value_and_flags(0, EfdFlags::EFD_NONBLOCK | EfdFlags::EFD_SEMAPHORE)?;
+    let opts = ListenerOptions {
+        capacity: 1024,
+        evfd: evfd.as_raw_fd(),
+    };
     let jh = std::thread::spawn(move || listener(theirs, opts));
-    EventIter {
+    Ok(EventIter {
         queue,
+        evfd,
         join_handle: Some(jh),
-    }
+    })
 }
 
 fn listener(queue: Arc<Queue>, opts: ListenerOptions) {
     // Get a udev socket
     trace!(capacity = opts.capacity, "listening");
-    let (socket, mut poller) = match init_listener() {
+    // Safety: EventFd is private and when dropped we close, and remains open until join is called.
+    // See EventIter drop
+    let evfd = unsafe { BorrowedFd::borrow_raw(opts.evfd) };
+    let (socket, mut poller) = match init_listener(evfd.as_fd()) {
         Ok(result) => result,
         Err(error) => {
             error!(?error, "failed to setup listener");
@@ -76,10 +90,14 @@ fn listener(queue: Arc<Queue>, opts: ListenerOptions) {
             }
             Ok(_) => {
                 for event in &events {
-                    trace!(event=?event, "mio event");
-                    if event.token() == Token(0) && event.is_read_closed() {
+                    if event.token() == Token(0) && event.is_readable() {
+                        trace!("closing listener");
+                        let mut arr = [0; std::mem::size_of::<u64>()];
+                        let _ = unistd::read(evfd.as_fd(), &mut arr);
                         break 'main;
-                    } else if event.token() == Token(0) && event.is_readable() {
+                    } else if event.token() == Token(1) && event.is_read_closed() {
+                        break 'main;
+                    } else if event.token() == Token(1) && event.is_readable() {
                         for event in socket.iter() {
                             trace!(event = ?event.event_type(), "device event");
                             let dev = event.device();
@@ -106,6 +124,22 @@ fn listener(queue: Arc<Queue>, opts: ListenerOptions) {
         }
     }
     trace!("listener finished");
+}
+
+#[inline]
+fn init_listener(evfd: BorrowedFd<'_>) -> io::Result<(udev::MonitorSocket, mio::Poll)> {
+    let mut socket = udev::MonitorBuilder::new()?
+        .match_subsystem("tty")?
+        .listen()?;
+    let poll = mio::Poll::new()?;
+    poll.registry().register(
+        &mut SourceFd(&evfd.as_raw_fd()),
+        Token(0),
+        Interest::READABLE,
+    )?;
+    poll.registry()
+        .register(&mut socket, Token(1), Interest::READABLE)?;
+    Ok((socket, poll))
 }
 
 fn read_device_info(dev: &Device) -> DeviceInfo {
@@ -158,20 +192,10 @@ fn read_device_info(dev: &Device) -> DeviceInfo {
     }
 }
 
-#[inline]
-fn init_listener() -> io::Result<(udev::MonitorSocket, mio::Poll)> {
-    let mut socket = udev::MonitorBuilder::new()?
-        .match_subsystem("tty")?
-        .listen()?;
-    let poll = mio::Poll::new()?;
-    poll.registry()
-        .register(&mut socket, Token(0), Interest::READABLE)?;
-    Ok((socket, poll))
-}
-
 /// An event emitter to listen for Usb Add Remove events
 pub struct EventIter {
     queue: Arc<Queue>,
+    evfd: EventFd,
     join_handle: Option<JoinHandle<()>>,
 }
 
@@ -189,11 +213,17 @@ impl Stream for EventIter {
 }
 
 impl Drop for EventIter {
+    // We signal the remote thread to break its loop with the eventfd, and then we join
     fn drop(&mut self) {
         if let Some(jh) = self.join_handle.take() {
-            self.queue.done();
-            if let Err(error) = jh.join() {
-                trace!(?error, "event iter join error");
+            match self.evfd.write(1) {
+                Err(error) => error!(?error, "failed to write evfd"),
+                Ok(_) => {
+                    self.queue.done();
+                    if let Err(error) = jh.join() {
+                        error!(?error, "event iter join error");
+                    }
+                }
             }
         }
     }

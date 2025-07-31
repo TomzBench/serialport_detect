@@ -11,7 +11,7 @@ use std::{
     pin::Pin,
     task::{Context, Poll, Waker},
 };
-use tracing::warn;
+use tracing::{trace, warn};
 
 /// Information about the serial port
 #[derive(Debug, Clone)]
@@ -115,6 +115,7 @@ pin_project! {
             inner: EventIter,
             cache: HashMap<String, EventInfo>
         },
+        Cancelled,
         Complete
     }
 }
@@ -124,10 +125,19 @@ impl Detect {
         // TODO use udev and list some devices
         Ok(Detect::Streaming {
             #[cfg(unix)]
-            inner: crate::posix::listen(),
+            inner: crate::posix::listen()?,
             #[cfg(unix)]
             cache: crate::posix::scan()?,
         })
+    }
+
+    // Stop listening to events
+    pub fn cancel(&mut self) {
+        match std::mem::replace(self, Detect::Cancelled) {
+            Detect::Cancelled => panic!("already cancelled stream!"),
+            Detect::Complete => trace!("cancelled a completed stream"),
+            Detect::Streaming { .. } => trace!("stream cancelled"),
+        }
     }
 }
 
@@ -154,6 +164,7 @@ impl Stream for Detect {
                         },
                     },
                 },
+                DetectProj::Cancelled => break Poll::Ready(None),
                 DetectProj::Complete => {
                     panic!("must not be polled after stream has finished")
                 }
