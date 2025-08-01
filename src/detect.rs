@@ -1,20 +1,16 @@
 // io.rs
 #[cfg(unix)]
-use crate::posix::EventIter;
 use crossbeam::queue::SegQueue;
-use futures::Stream;
 use parking_lot::Mutex;
-use pin_project_lite::pin_project;
-use std::collections::HashMap;
 use std::{
     io,
-    pin::Pin,
     task::{Context, Poll, Waker},
 };
-use tracing::{trace, warn};
+use tracing::trace;
 
 /// Information about the serial port
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "napi", napi_derive::napi(object))]
 pub struct DeviceInfo {
     /// Vendor ID
     pub vid: Option<String>,
@@ -30,6 +26,7 @@ pub struct DeviceInfo {
 
 /// A USB Add or Remove event has occured
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "napi", napi_derive::napi)]
 pub enum EventType {
     /// A USB serial port device has been plugged into the system
     Add,
@@ -39,6 +36,7 @@ pub enum EventType {
 
 /// Extra data appended to the event
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "napi", napi_derive::napi(object))]
 pub struct EventInfo {
     /// The port name, ie COM3 or tty/ACM0
     pub port: String,
@@ -79,96 +77,19 @@ impl Queue {
     }
 
     pub(crate) fn poll_next(&self, cx: &mut Context<'_>) -> Poll<Option<io::Result<EventInfo>>> {
+        // Waker accounting
+        let new_waker = cx.waker();
+        let mut waker = self.waker.lock();
+        *waker = match waker.take() {
+            Some(old_waker) if old_waker.will_wake(new_waker) => Some(old_waker),
+            None | Some(_) => Some(new_waker.clone()),
+        };
+
+        trace!(remaining = self.inner.len(), "polling");
         match self.inner.pop() {
-            None => {
-                let new_waker = cx.waker();
-                let mut waker = self.waker.lock();
-                *waker = match waker.take() {
-                    None => Some(new_waker.clone()),
-                    Some(old_waker) => {
-                        if old_waker.will_wake(new_waker) {
-                            Some(old_waker)
-                        } else {
-                            Some(new_waker.clone())
-                        }
-                    }
-                };
-                Poll::Pending
-            }
+            None => Poll::Pending,
             Some(Some(inner)) => Poll::Ready(Some(inner)),
             Some(None) => Poll::Ready(None),
-        }
-    }
-}
-
-pin_project! {
-    #[project = DetectProj]
-    #[project_replace = DetectProjReplace]
-    #[derive(Debug)]
-    #[must_use = "futures do nothing unless you `.await` or poll them"]
-    /// A Detect is a wrapper around the underlying system event listener. We cache device
-    /// information in this object so that when the device is removed, we know the details about
-    /// the device that was removed.
-    pub enum Detect {
-        Streaming {
-            #[pin]
-            inner: EventIter,
-            cache: HashMap<String, EventInfo>
-        },
-        Cancelled,
-        Complete
-    }
-}
-
-impl Detect {
-    pub(crate) fn new() -> io::Result<Detect> {
-        // TODO use udev and list some devices
-        Ok(Detect::Streaming {
-            #[cfg(unix)]
-            inner: crate::posix::listen()?,
-            #[cfg(unix)]
-            cache: crate::posix::scan()?,
-        })
-    }
-
-    // Stop listening to events
-    pub fn cancel(&mut self) {
-        match std::mem::replace(self, Detect::Cancelled) {
-            Detect::Cancelled => panic!("already cancelled stream!"),
-            Detect::Complete => trace!("cancelled a completed stream"),
-            Detect::Streaming { .. } => trace!("stream cancelled"),
-        }
-    }
-}
-
-impl Stream for Detect {
-    type Item = io::Result<EventInfo>;
-    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        loop {
-            match self.as_mut().project() {
-                DetectProj::Streaming { inner, cache } => match inner.poll_next(cx) {
-                    Poll::Pending => break Poll::Pending,
-                    Poll::Ready(None) => {
-                        self.project_replace(Self::Complete);
-                        break Poll::Ready(None);
-                    }
-                    Poll::Ready(Some(Err(e))) => break Poll::Ready(Some(Err(e))),
-                    Poll::Ready(Some(Ok(ev))) => match ev.event {
-                        EventType::Add => {
-                            cache.insert(ev.port.clone(), ev.clone());
-                            break Poll::Ready(Some(Ok(ev)));
-                        }
-                        EventType::Remove => match cache.remove(ev.port.as_str()) {
-                            None => warn!(port = ev.port.as_str(), "not found in cache"),
-                            Some(_info) => break Poll::Ready(Some(Ok(ev))),
-                        },
-                    },
-                },
-                DetectProj::Cancelled => break Poll::Ready(None),
-                DetectProj::Complete => {
-                    panic!("must not be polled after stream has finished")
-                }
-            }
         }
     }
 }

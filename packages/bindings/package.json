@@ -1,5 +1,5 @@
 {
-  "name": "@tomzbench/serialport-detect",
+  "name": "@tomzbench/serialport-bindings",
   "version": "1.0.0",
   "description": "Template project for writing node package with napi-rs",
   "main": "index.js",
@@ -18,7 +18,7 @@
     "index.js"
   ],
   "napi": {
-    "binaryName": "serialport-detect",
+    "binaryName": "serialport-bindings",
     "targets": [
       "x86_64-pc-windows-msvc",
       "x86_64-unknown-linux-gnu"

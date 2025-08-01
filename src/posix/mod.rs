@@ -12,7 +12,7 @@ use std::{
     ffi::OsStr,
     fmt::{self, Debug},
     io,
-    os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, OwnedFd, RawFd},
+    os::fd::{AsFd, AsRawFd, BorrowedFd, RawFd},
     pin::Pin,
     sync::Arc,
     task::{Context, Poll},
@@ -27,12 +27,12 @@ struct ListenerOptions {
     evfd: RawFd,
 }
 
-pub(crate) fn scan() -> io::Result<HashMap<String, EventInfo>> {
+/// Scan for connected devices
+pub fn scan() -> io::Result<HashMap<String, EventInfo>> {
     let mut enumerator = udev::Enumerator::new()?;
     enumerator.match_subsystem("tty")?;
     let items = enumerator
         .scan_devices()?
-        .into_iter()
         .map(|dev| {
             let port = match dev.devnode() {
                 Some(path) => path.to_str().unwrap_or("").to_string(),
@@ -50,7 +50,7 @@ pub(crate) fn scan() -> io::Result<HashMap<String, EventInfo>> {
 }
 
 /// Listen for connected devices
-pub fn listen() -> io::Result<EventIter> {
+pub fn listen() -> io::Result<(AbortHandle, EventIter)> {
     let queue = Arc::new(Queue::new());
     let theirs = Arc::clone(&queue);
     let evfd = EventFd::from_value_and_flags(0, EfdFlags::EFD_NONBLOCK | EfdFlags::EFD_SEMAPHORE)?;
@@ -58,12 +58,8 @@ pub fn listen() -> io::Result<EventIter> {
         capacity: 1024,
         evfd: evfd.as_raw_fd(),
     };
-    let jh = std::thread::spawn(move || listener(theirs, opts));
-    Ok(EventIter {
-        queue,
-        evfd,
-        join_handle: Some(jh),
-    })
+    let join_handle = Some(std::thread::spawn(move || listener(theirs, opts)));
+    Ok((AbortHandle { evfd, join_handle }, EventIter { queue }))
 }
 
 fn listener(queue: Arc<Queue>, opts: ListenerOptions) {
@@ -94,8 +90,11 @@ fn listener(queue: Arc<Queue>, opts: ListenerOptions) {
                         trace!("closing listener");
                         let mut arr = [0; std::mem::size_of::<u64>()];
                         let _ = unistd::read(evfd.as_fd(), &mut arr);
+                        queue.done();
                         break 'main;
                     } else if event.token() == Token(1) && event.is_read_closed() {
+                        trace!("closing listener");
+                        queue.done();
                         break 'main;
                     } else if event.token() == Token(1) && event.is_readable() {
                         for event in socket.iter() {
@@ -195,8 +194,6 @@ fn read_device_info(dev: &Device) -> DeviceInfo {
 /// An event emitter to listen for Usb Add Remove events
 pub struct EventIter {
     queue: Arc<Queue>,
-    evfd: EventFd,
-    join_handle: Option<JoinHandle<()>>,
 }
 
 impl Debug for EventIter {
@@ -212,14 +209,26 @@ impl Stream for EventIter {
     }
 }
 
-impl Drop for EventIter {
+/// The AbortHandle will cause the [`EventIter`] to stop emitting events when dropped
+#[derive(Debug)]
+pub struct AbortHandle {
+    evfd: EventFd,
+    join_handle: Option<JoinHandle<()>>,
+}
+
+impl AbortHandle {
+    /// Cancel [`EventIter`] and no longer listen to Device Connect and Disconnect events
+    pub fn abort(self) {}
+}
+
+impl Drop for AbortHandle {
     // We signal the remote thread to break its loop with the eventfd, and then we join
     fn drop(&mut self) {
+        trace!("dropping event iter");
         if let Some(jh) = self.join_handle.take() {
             match self.evfd.write(1) {
                 Err(error) => error!(?error, "failed to write evfd"),
                 Ok(_) => {
-                    self.queue.done();
                     if let Err(error) = jh.join() {
                         error!(?error, "event iter join error");
                     }

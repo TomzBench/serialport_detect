@@ -12,7 +12,7 @@
 
 #![deny(
     clippy::dbg_macro,
-    missing_docs,
+    //missing_docs,
     missing_debug_implementations,
     missing_copy_implementations
 )]
@@ -33,10 +33,20 @@ mod windows;
 
 #[cfg(unix)]
 mod posix;
-use detect::Detect;
-use std::io;
+use std::collections::HashMap;
+
+#[cfg(unix)]
+pub use posix::{AbortHandle, EventIter};
+
+pub use detect::{EventInfo, EventType};
 
 /// Listen for events
-pub fn listen() -> io::Result<Detect> {
-    Detect::new()
+pub fn listen() -> std::io::Result<(AbortHandle, EventIter)> {
+    #[cfg(unix)]
+    posix::listen()
+}
+
+pub fn scan() -> std::io::Result<HashMap<String, EventInfo>> {
+    #[cfg(unix)]
+    posix::scan()
 }

@@ -73,23 +73,23 @@ function requireNative() {
   } else if (process.platform === 'android') {
     if (process.arch === 'arm64') {
       try {
-        return require('./package-template.android-arm64.node')
+        return require('./serialport-bindings.android-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-android-arm64')
+        return require('@tomzbench/serialport-bindings-android-arm64')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'arm') {
       try {
-        return require('./package-template.android-arm-eabi.node')
+        return require('./serialport-bindings.android-arm-eabi.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-android-arm-eabi')
+        return require('@tomzbench/serialport-bindings-android-arm-eabi')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -99,34 +99,34 @@ function requireNative() {
   } else if (process.platform === 'win32') {
     if (process.arch === 'x64') {
       try {
-        return require('./package-template.win32-x64-msvc.node')
+        return require('./serialport-bindings.win32-x64-msvc.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-win32-x64-msvc')
+        return require('@tomzbench/serialport-bindings-win32-x64-msvc')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'ia32') {
       try {
-        return require('./package-template.win32-ia32-msvc.node')
+        return require('./serialport-bindings.win32-ia32-msvc.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-win32-ia32-msvc')
+        return require('@tomzbench/serialport-bindings-win32-ia32-msvc')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'arm64') {
       try {
-        return require('./package-template.win32-arm64-msvc.node')
+        return require('./serialport-bindings.win32-arm64-msvc.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-win32-arm64-msvc')
+        return require('@tomzbench/serialport-bindings-win32-arm64-msvc')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -135,34 +135,34 @@ function requireNative() {
     }
   } else if (process.platform === 'darwin') {
     try {
-      return require('./package-template.darwin-universal.node')
+      return require('./serialport-bindings.darwin-universal.node')
     } catch (e) {
       loadErrors.push(e)
     }
     try {
-      return require('@napi-rs/package-template-darwin-universal')
+      return require('@tomzbench/serialport-bindings-darwin-universal')
     } catch (e) {
       loadErrors.push(e)
     }
     if (process.arch === 'x64') {
       try {
-        return require('./package-template.darwin-x64.node')
+        return require('./serialport-bindings.darwin-x64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-darwin-x64')
+        return require('@tomzbench/serialport-bindings-darwin-x64')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'arm64') {
       try {
-        return require('./package-template.darwin-arm64.node')
+        return require('./serialport-bindings.darwin-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-darwin-arm64')
+        return require('@tomzbench/serialport-bindings-darwin-arm64')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -172,23 +172,23 @@ function requireNative() {
   } else if (process.platform === 'freebsd') {
     if (process.arch === 'x64') {
       try {
-        return require('./package-template.freebsd-x64.node')
+        return require('./serialport-bindings.freebsd-x64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-freebsd-x64')
+        return require('@tomzbench/serialport-bindings-freebsd-x64')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'arm64') {
       try {
-        return require('./package-template.freebsd-arm64.node')
+        return require('./serialport-bindings.freebsd-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-freebsd-arm64')
+        return require('@tomzbench/serialport-bindings-freebsd-arm64')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -199,23 +199,23 @@ function requireNative() {
     if (process.arch === 'x64') {
       if (isMusl()) {
         try {
-          return require('./package-template.linux-x64-musl.node')
+          return require('./serialport-bindings.linux-x64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-linux-x64-musl')
+          return require('@tomzbench/serialport-bindings-linux-x64-musl')
         } catch (e) {
           loadErrors.push(e)
         }
       } else {
         try {
-          return require('./package-template.linux-x64-gnu.node')
+          return require('./serialport-bindings.linux-x64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-linux-x64-gnu')
+          return require('@tomzbench/serialport-bindings-linux-x64-gnu')
         } catch (e) {
           loadErrors.push(e)
         }
@@ -223,23 +223,23 @@ function requireNative() {
     } else if (process.arch === 'arm64') {
       if (isMusl()) {
         try {
-          return require('./package-template.linux-arm64-musl.node')
+          return require('./serialport-bindings.linux-arm64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-linux-arm64-musl')
+          return require('@tomzbench/serialport-bindings-linux-arm64-musl')
         } catch (e) {
           loadErrors.push(e)
         }
       } else {
         try {
-          return require('./package-template.linux-arm64-gnu.node')
+          return require('./serialport-bindings.linux-arm64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-linux-arm64-gnu')
+          return require('@tomzbench/serialport-bindings-linux-arm64-gnu')
         } catch (e) {
           loadErrors.push(e)
         }
@@ -247,23 +247,23 @@ function requireNative() {
     } else if (process.arch === 'arm') {
       if (isMusl()) {
         try {
-          return require('./package-template.linux-arm-musleabihf.node')
+          return require('./serialport-bindings.linux-arm-musleabihf.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-linux-arm-musleabihf')
+          return require('@tomzbench/serialport-bindings-linux-arm-musleabihf')
         } catch (e) {
           loadErrors.push(e)
         }
       } else {
         try {
-          return require('./package-template.linux-arm-gnueabihf.node')
+          return require('./serialport-bindings.linux-arm-gnueabihf.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-linux-arm-gnueabihf')
+          return require('@tomzbench/serialport-bindings-linux-arm-gnueabihf')
         } catch (e) {
           loadErrors.push(e)
         }
@@ -271,46 +271,46 @@ function requireNative() {
     } else if (process.arch === 'riscv64') {
       if (isMusl()) {
         try {
-          return require('./package-template.linux-riscv64-musl.node')
+          return require('./serialport-bindings.linux-riscv64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-linux-riscv64-musl')
+          return require('@tomzbench/serialport-bindings-linux-riscv64-musl')
         } catch (e) {
           loadErrors.push(e)
         }
       } else {
         try {
-          return require('./package-template.linux-riscv64-gnu.node')
+          return require('./serialport-bindings.linux-riscv64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-linux-riscv64-gnu')
+          return require('@tomzbench/serialport-bindings-linux-riscv64-gnu')
         } catch (e) {
           loadErrors.push(e)
         }
       }
     } else if (process.arch === 'ppc64') {
       try {
-        return require('./package-template.linux-ppc64-gnu.node')
+        return require('./serialport-bindings.linux-ppc64-gnu.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-linux-ppc64-gnu')
+        return require('@tomzbench/serialport-bindings-linux-ppc64-gnu')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 's390x') {
       try {
-        return require('./package-template.linux-s390x-gnu.node')
+        return require('./serialport-bindings.linux-s390x-gnu.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-linux-s390x-gnu')
+        return require('@tomzbench/serialport-bindings-linux-s390x-gnu')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -320,34 +320,34 @@ function requireNative() {
   } else if (process.platform === 'openharmony') {
     if (process.arch === 'arm64') {
       try {
-        return require('./package-template.linux-arm64-ohos.node')
+        return require('./serialport-bindings.linux-arm64-ohos.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-linux-arm64-ohos')
+        return require('@tomzbench/serialport-bindings-linux-arm64-ohos')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'x64') {
       try {
-        return require('./package-template.linux-x64-ohos.node')
+        return require('./serialport-bindings.linux-x64-ohos.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-linux-x64-ohos')
+        return require('@tomzbench/serialport-bindings-linux-x64-ohos')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'arm') {
       try {
-        return require('./package-template.linux-arm-ohos.node')
+        return require('./serialport-bindings.linux-arm-ohos.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-linux-arm-ohos')
+        return require('@tomzbench/serialport-bindings-linux-arm-ohos')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -363,7 +363,7 @@ nativeBinding = requireNative()
 
 if (!nativeBinding || process.env.NAPI_RS_FORCE_WASI) {
   try {
-    nativeBinding = require('./package-template.wasi.cjs')
+    nativeBinding = require('./serialport-bindings.wasi.cjs')
   } catch (err) {
     if (process.env.NAPI_RS_FORCE_WASI) {
       loadErrors.push(err)
@@ -371,7 +371,7 @@ if (!nativeBinding || process.env.NAPI_RS_FORCE_WASI) {
   }
   if (!nativeBinding) {
     try {
-      nativeBinding = require('@napi-rs/package-template-wasm32-wasi')
+      nativeBinding = require('@tomzbench/serialport-bindings-wasm32-wasi')
     } catch (err) {
       if (process.env.NAPI_RS_FORCE_WASI) {
         loadErrors.push(err)
@@ -393,4 +393,7 @@ if (!nativeBinding) {
 }
 
 module.exports = nativeBinding
-module.exports.plus100 = nativeBinding.plus100
+module.exports.EventType = nativeBinding.EventType
+module.exports.JsEventIter = nativeBinding.JsEventIter
+module.exports.Monitor = nativeBinding.Monitor
+module.exports.createReadableStream = nativeBinding.createReadableStream

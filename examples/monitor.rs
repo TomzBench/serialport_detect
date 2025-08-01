@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let timeout = tokio::time::sleep(std::time::Duration::from_secs(5));
 
     // Listen to serialport events
-    let mut stream = serialport_detect::listen().unwrap();
+    let (abort, mut stream) = serialport_detect::listen().unwrap();
 
     // Merge the streams
     loop {
@@ -49,14 +49,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Some(Err(error)) => error!(?error, "device event error"),
                     None => {
                         info!("demo over");
-                        stream.cancel();
+                        drop(abort);
                         break;
                     }
                 }
             },
             _ = tokio::time::sleep_until(timeout.deadline()) => {
                 info!("demo over");
-                stream.cancel();
+                drop(abort);
                 break
             }
         }
