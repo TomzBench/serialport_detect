@@ -27,23 +27,29 @@ export interface EventInfo {
 /** A USB Add or Remove event has occured */
 export declare const enum EventType {
   /** A USB serial port device has been plugged into the system */
-  Add = 0,
+  Add = 'Add',
   /** A USB serial port device has been unplugged from the system */
-  Remove = 1
+  Remove = 'Remove'
 }
-/**
- * See [`EventIter`]
- *
- * A Javascript runtime wrapper around [`EventIter`] which simply maps the error
- */
-export declare class JsEventIter {
-
-}
-
-export declare class Monitor {
-  constructor()
-  listen(): ReadableStream<EventInfo>
+export declare class JsAbortHandle {
   abort(): void
 }
 
-export declare function createReadableStream(): ReadableStream<Buffer>
+/** Handle to a log event transmitter */
+export declare class Logger {
+  abort(): void
+}
+
+/** Provide event logs to a callback */
+export declare function configureLogger(tsfn: ((err: Error | null, arg: LogInfo) => any)): [Logger, Promise<unknown>]
+
+export declare function listen(tsfn: ((err: Error | null, arg: EventInfo) => any)): [JsAbortHandle, Promise<undefined>]
+
+export interface LogInfo {
+  mesg: string
+  meta: Record<string, any>
+  target: string
+  line?: number
+  file?: string
+  modulePath?: string
+}

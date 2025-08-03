@@ -394,6 +394,7 @@ if (!nativeBinding) {
 
 module.exports = nativeBinding
 module.exports.EventType = nativeBinding.EventType
-module.exports.JsEventIter = nativeBinding.JsEventIter
-module.exports.Monitor = nativeBinding.Monitor
-module.exports.createReadableStream = nativeBinding.createReadableStream
+module.exports.JsAbortHandle = nativeBinding.JsAbortHandle
+module.exports.Logger = nativeBinding.Logger
+module.exports.configureLogger = nativeBinding.configureLogger
+module.exports.listen = nativeBinding.listen

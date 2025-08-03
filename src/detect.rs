@@ -26,7 +26,7 @@ pub struct DeviceInfo {
 
 /// A USB Add or Remove event has occured
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "napi", napi_derive::napi)]
+#[cfg_attr(feature = "napi", napi_derive::napi(string_enum))]
 pub enum EventType {
     /// A USB serial port device has been plugged into the system
     Add,

@@ -1,6 +1,5 @@
 //! Listen for usb device events
 
-//use futures::StreamExt;
 use tokio_stream::StreamExt as TokioStreamExt;
 use tracing::{error, info};
 use tracing_subscriber::{filter::LevelFilter, fmt, layer::SubscriberExt, prelude::*};
