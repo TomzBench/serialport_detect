@@ -52,7 +52,7 @@ pub fn listen() -> std::io::Result<(AbortHandle, EventIter)> {
 
 pub fn scan() -> std::io::Result<HashMap<String, DeviceInfo>> {
     #[cfg(unix)]
-    posix::scan();
+    return posix::scan();
     #[cfg(windows)]
     return windows::scan();
 }

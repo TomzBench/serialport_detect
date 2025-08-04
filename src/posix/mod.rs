@@ -28,7 +28,7 @@ struct ListenerOptions {
 }
 
 /// Scan for connected devices
-pub fn scan() -> io::Result<HashMap<String, EventInfo>> {
+pub fn scan() -> io::Result<HashMap<String, DeviceInfo>> {
     let mut enumerator = udev::Enumerator::new()?;
     enumerator.match_subsystem("tty")?;
     let items = enumerator
@@ -38,12 +38,7 @@ pub fn scan() -> io::Result<HashMap<String, EventInfo>> {
                 Some(path) => path.to_str().unwrap_or("").to_string(),
                 _ => "".to_string(),
             };
-            let info = EventInfo {
-                meta: read_device_info(&dev),
-                port: port.clone(),
-                event: EventType::Add,
-            };
-            (port, info)
+            (port.clone(), read_device_info(port, &dev))
         })
         .collect();
     Ok(items)
@@ -111,8 +106,7 @@ fn listener(queue: Arc<Queue>, opts: ListenerOptions) {
                             };
                             if let Some(item) = item {
                                 queue.push(Ok(EventInfo {
-                                    meta: read_device_info(&dev),
-                                    port,
+                                    device: read_device_info(port, &dev),
                                     event: item,
                                 }));
                             }
@@ -141,7 +135,7 @@ fn init_listener(evfd: BorrowedFd<'_>) -> io::Result<(udev::MonitorSocket, mio::
     Ok((socket, poll))
 }
 
-fn read_device_info(dev: &Device) -> DeviceInfo {
+fn read_device_info(port: String, dev: &Device) -> DeviceInfo {
     let serial = dev
         .property_value("ID_SERIAL_SHORT")
         .and_then(OsStr::to_str)
@@ -183,6 +177,7 @@ fn read_device_info(dev: &Device) -> DeviceInfo {
         .and_then(OsStr::to_str)
         .map(|s| s.to_string());
     DeviceInfo {
+        port,
         serial,
         manufacturer,
         product,
