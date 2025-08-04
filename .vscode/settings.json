@@ -1,32 +1,13 @@
 {
   "rust-analyzer": {
-    "diagnostics": {
-      "experimental": {
-        "enable": true
-      }
-    },
+    "diagnostics": {},
     "cargo": {
-      "features": "all",
       "buildScripts": { "enable": true }
     },
     "rustfmt": {
       "extraArgs": ["--edition=2024"]
     },
-    "check": {
-      "features": "all",
-      "overrideCommand": [
-        "cargo",
-        "+nightly",
-        "clippy",
-        "--workspace",
-        "--all-targets",
-        "--all-features",
-        "--tests",
-        "--examples",
-        "--benches",
-        "--message-format=json"
-      ]
-    },
+    "check": {},
     "procMacro": { "enable": true }
   }
 }

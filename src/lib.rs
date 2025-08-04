@@ -30,6 +30,8 @@ mod detect;
 
 #[cfg(windows)]
 mod windows;
+#[cfg(windows)]
+pub use windows::{AbortHandle, EventIter};
 
 #[cfg(unix)]
 mod posix;
@@ -38,15 +40,19 @@ use std::collections::HashMap;
 #[cfg(unix)]
 pub use posix::{AbortHandle, EventIter};
 
-pub use detect::{EventInfo, EventType};
+pub use detect::{DeviceInfo, EventInfo, EventType};
 
 /// Listen for events
 pub fn listen() -> std::io::Result<(AbortHandle, EventIter)> {
     #[cfg(unix)]
-    posix::listen()
+    return posix::listen();
+    #[cfg(windows)]
+    return windows::listen();
 }
 
-pub fn scan() -> std::io::Result<HashMap<String, EventInfo>> {
+pub fn scan() -> std::io::Result<HashMap<String, DeviceInfo>> {
     #[cfg(unix)]
-    posix::scan()
+    posix::scan();
+    #[cfg(windows)]
+    return windows::scan();
 }

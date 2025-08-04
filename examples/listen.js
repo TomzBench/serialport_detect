@@ -10,7 +10,6 @@ let [logger, doneLogging] = binding.configureLogger((err, val) => {
 });
 
 // Setup device listener
-//let devices = new binding.Devices();
 let [devices, doneListening] = binding.listen((err, val) => {
   if (err) {
     console.err(err);
@@ -27,4 +26,4 @@ setTimeout(() => {
   console.log("ending demo");
   logger.abort();
   devices.abort();
-}, 5000);
+}, 15000);

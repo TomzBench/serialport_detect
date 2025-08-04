@@ -20,10 +20,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     // Welcome message
-    info!("Listening to Serial Port Detect events for 5 seconds");
+    info!("Listening to Serial Port Detect events for 15 seconds");
 
     // Create a timeout to end our demo
-    let timeout = tokio::time::sleep(std::time::Duration::from_secs(5));
+    let timeout = tokio::time::sleep(std::time::Duration::from_secs(15));
 
     // Listen to serialport events
     let (abort, mut stream) = serialport_detect::listen().unwrap();
@@ -36,12 +36,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Some(Ok(event)) => {
                         info!(
                             action = ?event.event,
-                            port = ?event.port,
-                            vid = ?event.meta.vid,
-                            pid = ?event.meta.pid,
-                            serial = ?event.meta.serial,
-                            manufacture = ?event.meta.manufacturer,
-                            product = ?event.meta.product,
+                            port = ?event.device.port,
+                            vid = ?event.device.vid,
+                            pid = ?event.device.pid,
+                            serial = ?event.device.serial,
+                            manufacture = ?event.device.manufacturer,
+                            product = ?event.device.product,
                             "device event"
                         );
                     }

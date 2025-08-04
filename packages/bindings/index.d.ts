@@ -2,6 +2,8 @@
 /* eslint-disable */
 /** Information about the serial port */
 export interface DeviceInfo {
+  /** The port name. IE: COM3 */
+  port: string
   /** Vendor ID */
   vid?: string
   /** Product ID */
@@ -16,10 +18,8 @@ export interface DeviceInfo {
 
 /** Extra data appended to the event */
 export interface EventInfo {
-  /** The port name, ie COM3 or tty/ACM0 */
-  port: string
-  /** Meta data about the port */
-  meta: DeviceInfo
+  /** Meta data about the port. See [`DeviceInfo`] */
+  device: DeviceInfo
   /** See [`EventType`] */
   event: EventType
 }

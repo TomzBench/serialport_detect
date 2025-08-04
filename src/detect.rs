@@ -1,17 +1,17 @@
 // io.rs
-#[cfg(unix)]
 use crossbeam::queue::SegQueue;
 use parking_lot::Mutex;
 use std::{
     io,
     task::{Context, Poll, Waker},
 };
-use tracing::trace;
 
 /// Information about the serial port
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "napi", napi_derive::napi(object))]
 pub struct DeviceInfo {
+    /// The port name. IE: COM3
+    pub port: String,
     /// Vendor ID
     pub vid: Option<String>,
     /// Product ID
@@ -38,10 +38,8 @@ pub enum EventType {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "napi", napi_derive::napi(object))]
 pub struct EventInfo {
-    /// The port name, ie COM3 or tty/ACM0
-    pub port: String,
-    /// Meta data about the port
-    pub meta: DeviceInfo,
+    /// Meta data about the port. See [`DeviceInfo`]
+    pub device: DeviceInfo,
     /// See [`EventType`]
     pub event: EventType,
 }
@@ -85,7 +83,6 @@ impl Queue {
             None | Some(_) => Some(new_waker.clone()),
         };
 
-        trace!(remaining = self.inner.len(), "polling");
         match self.inner.pop() {
             None => Poll::Pending,
             Some(Some(inner)) => Poll::Ready(Some(inner)),
