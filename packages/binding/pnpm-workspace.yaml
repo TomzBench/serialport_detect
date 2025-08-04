@@ -1,0 +1,3 @@
+packages:
+  - 'packages/binding'
+  - 'packages/binding-win32-x64-msvc'

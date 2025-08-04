@@ -1,4 +1,4 @@
-let binding = require("../packages/bindings");
+let binding = require("../packages/binding");
 
 // Setup logging
 let [logger, doneLogging] = binding.configureLogger((err, val) => {
