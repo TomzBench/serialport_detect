@@ -14,13 +14,8 @@ futures = "0.3"
 serialport-detect = { path = "../../", features = ["napi"] }
 napi-derive = "3.0.0"
 napi = { version = "3.0.0", default-features = false, features = [
-  "tokio",
-  "tokio_rt",
-  "tokio-stream",
-  "tokio_io_util",
-  "serde-json",
-  "async",
-  "web_stream"
+"tokio",
+"tokio_rt",
 ]}
 tracing = "0.1"
 tracing-subscriber = "0.3"
