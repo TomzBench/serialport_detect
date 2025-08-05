@@ -1,0 +1,63 @@
+stages:
+  - build
+  - publish
+#
+# Helpers code snippets
+.scripts:
+  setup-linux-environment:
+    - npm config set //registery.npmjs.org/:_authToken ${NPM_TOKEN}
+  setup-windows-environment:
+    - npm config set //registery.npmjs.org/:_authToken ${NPM_TOKEN}
+# The linux container
+.linux:
+  tags:
+    - linux
+  image: gitlab.altronix.com:5050/software-engineering/sdk/serialport
+  cache:
+    key: $CI_COMMIT_REF_SLUG
+    paths:
+      - .pnpm-store
+#
+# The windows container
+.windows:
+  tags:
+    - windows
+#
+# Build for linux
+linux build:
+  stage: build
+  extends:
+    - .linux
+  script:
+    - !reference [.scripts, setup-linux-environment]
+    - pnpm --filter serialport-detect-binding build
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/packages/binding/index.d.ts
+      - $CI_PROJECT_DIR/packages/binding/index.js
+      - $CI_PROJECT_DIR/packages/binding/serialport-detect-binding.linux-x64-gnu.node
+    when: always
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+    - if: $CI_MERGE_REQUEST_ID
+    - if: $CI_COMMIT_TAG
+
+#
+# Build for windows
+windows build:
+  stage: build
+  extends: 
+    - .windows
+  script:
+    - !reference [.scripts, setup-linux-environment]
+    - pnpm --filter serialport-detect-binding build
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/packages/binding/index.d.ts
+      - $CI_PROJECT_DIR/packages/binding/index.js
+      - $CI_PROJECT_DIR/packages/binding/serialport-detect-binding.linux-x64-gnu.node
+    when: always
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+    - if: $CI_MERGE_REQUEST_ID
+    - if: $CI_COMMIT_TAG
