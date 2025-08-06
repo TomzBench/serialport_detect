@@ -92,5 +92,9 @@
     "singleQuote": true,
     "arrowParens": "always"
   },
-  "packageManager": "pnpm@10.5.2"
+  "packageManager": "pnpm@10.5.2",
+  "optionalDependencies": {
+    "@altronix/serialport-detect-binding-win32-x64-msvc": "0.1.0",
+    "@altronix/serialport-detect-binding-linux-x64-gnu": "0.1.0"
+  }
 }
