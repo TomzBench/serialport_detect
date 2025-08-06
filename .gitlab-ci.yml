@@ -6,6 +6,7 @@ stages:
 .scripts:
   setup-linux-environment:
     - npm config set //registery.npmjs.org/:_authToken ${NPM_TOKEN}
+    - source /root/.cargo/env
   setup-windows-environment:
     - npm config set //registery.npmjs.org/:_authToken ${NPM_TOKEN}
 # The linux container
