@@ -1,6 +1,6 @@
 {
   "name": "@altronix/serialport-detect-binding",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Template project for writing node package with napi-rs",
   "main": "index.js",
   "repository": "git@gitlab.altronix.com:software-engineering/sdk/serialport.git",
@@ -16,6 +16,7 @@
   ],
   "napi": {
     "binaryName": "serialport-detect-binding",
+    "npmClient": "pnpm",
     "targets": [
       "x86_64-pc-windows-msvc",
       "x86_64-unknown-linux-gnu"
@@ -29,7 +30,7 @@
     "access": "public"
   },
   "scripts": {
-    "artifacts": "napi artifacts",
+    "artifacts": "napi create-npm-dirs && napi artifacts -o .",
     "bench": "node --import @oxc-node/core/register benchmark/bench.ts",
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
@@ -94,7 +95,8 @@
   },
   "packageManager": "pnpm@10.5.2",
   "optionalDependencies": {
-    "@altronix/serialport-detect-binding-win32-x64-msvc": "0.1.0",
-    "@altronix/serialport-detect-binding-linux-x64-gnu": "0.1.0"
+    "@altronix/serialport-detect-binding-win32-x64-msvc": "0.3.0",
+    "@altronix/serialport-detect-binding-linux-x64-gnu": "0.3.0"
   }
 }
+
