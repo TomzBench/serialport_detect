@@ -74,6 +74,7 @@ publish:
   script:
     - !reference [.scripts, setup-linux-environment]
     - pnpm --filter serialport-detect-binding install
+    - pnpm --filter serialport-detect-binding artifacts
     - pnpm --filter serialport-detect-binding publish --access public --no-git-checks # see comment above for why avoid git checks
   rules:
     - if: $CI_COMMIT_TAG
