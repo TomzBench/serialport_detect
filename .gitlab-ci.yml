@@ -42,12 +42,11 @@ linux build:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
     - if: $CI_MERGE_REQUEST_ID
     - if: $CI_COMMIT_TAG
-
 #
 # Build for windows
 windows build:
   stage: build
-  extends: 
+  extends:
     - .windows
   script:
     - !reference [.scripts, setup-windows-environment]
@@ -64,12 +63,14 @@ windows build:
     - if: $CI_COMMIT_TAG
 #
 # publish our linux package
+# We publish with no-git-checks. See here:
+# https://github.com/pnpm/pnpm/issues/5894
 publish:
   stage: publish
   extends:
     - .linux
   script:
     - !reference [.scripts, setup-linux-environment]
-    - pnpm --filter serialport-detect-binding publish --access public
+    - pnpm --filter serialport-detect-binding publish --access public --no-git-checks # see comment above for why avoid git checks
   rules:
     - if: $CI_COMMIT_TAG
