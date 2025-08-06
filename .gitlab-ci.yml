@@ -50,7 +50,7 @@ windows build:
   extends: 
     - .windows
   script:
-    - !reference [.scripts, setup-linux-environment]
+    - !reference [.scripts, setup-windows-environment]
     - pnpm --filter serialport-detect-binding build
   artifacts:
     paths:
