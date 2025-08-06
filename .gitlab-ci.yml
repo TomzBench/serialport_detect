@@ -56,9 +56,20 @@ windows build:
     paths:
       - $CI_PROJECT_DIR/packages/binding/index.d.ts
       - $CI_PROJECT_DIR/packages/binding/index.js
-      - $CI_PROJECT_DIR/packages/binding/serialport-detect-binding.linux-x64-gnu.node
+      - $CI_PROJECT_DIR/packages/binding/*.node
     when: always
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
     - if: $CI_MERGE_REQUEST_ID
+    - if: $CI_COMMIT_TAG
+#
+# publish our linux package
+publish:
+  stage: publish
+  extends:
+    - .linux
+  script:
+    - !reference [.scripts, setup-linux-environment]
+    - pnpm --filter serialport-detect-binding publish --access public
+  rules:
     - if: $CI_COMMIT_TAG
